@@ -1,2 +1,2 @@
-source/.env
-source/node_modules/
+/*/.env
+/*/node_modules/
