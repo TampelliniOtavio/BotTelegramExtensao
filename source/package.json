@@ -1,5 +1,5 @@
 {
-  "name": "ExtensaoBotTelegram",
+  "name": "bot-telegram-usjt-extensao",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "ibm-watson": "^6.0.4",
+    "mongoose": "^5.12.5",
     "telegraf": "^4.3.0"
   },
   "engines": {
