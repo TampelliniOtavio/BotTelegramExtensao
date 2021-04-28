@@ -1,11 +1,6 @@
 
 const Message = require('./models/messageSchema')
 
- function pass(str) {
-    str = str.Replace('%','<')
-    str = str.Replace('&','/')
-    return str;
-} 
 
 async function get(){
     let retorno = await Message.find().then(res =>{
@@ -16,5 +11,12 @@ async function get(){
     return retorno
 }
 
-module.exports.pass = pass
 module.exports.get =  get()
+
+module.exports.arrayStringToInlineString = array =>{
+    let retorno = ''
+    array.map(linha => {
+        retorno += linha + '\n'
+    })
+    return retorno
+}
