@@ -22,6 +22,9 @@ const service = require('./service')
 const { Telegraf } = require("telegraf");
 const bot = new Telegraf(process.env.TOKEN);
 
+// https://github.com/RealPeha/telegram-keyboard
+const { Keyboard, Key } = require('telegram-keyboard');
+
 // pegar toda a base do mongoDB e depois fazer as operações com o bot
 service.get.then(base=>{
     //após o retorno da base de dados
@@ -39,41 +42,41 @@ service.get.then(base=>{
     
     // comandos /start, /help e /settings
     bot.start(ctx => ctx.replyWithMarkdown(startMessage));
-    bot.help(ctx => ctx.replyWithMarkdown(helpMessage));
-    bot.settings(ctx => ctx.replyWithMarkdown(settingsMessage));
+    bot.help(ctx => ctx.replyWithMarkdown(helpMessage),{reply_markup:{remove_keyboard:true}});
+    bot.settings(ctx => ctx.replyWithMarkdown(settingsMessage),{reply_markup:{remove_keyboard:true}});
     // comando personalizado /teste
-    // bot.command("teste",ctx => ctx.editMessageReplyMarkup(inlineMessageRatingKeyboard))
-    // //quando o  comando acima funciona
-    // .then(text => console.log("ELE FUNCIONA ALSKDJHFGHASLJKDDFBASJDHFDGASDJDHFAS"))
-    // //quando tem algum erro no comando
-    // .catch(err=>console.log("Não funcionou \nerro: "+err))
+    let vetor = []
+    base.map(linha=>{
+        vetor = [...vetor,Key.callback(linha.key,linha.key)]
+    })
+    const teclado = Keyboard.make(vetor,{columns:2}).reply()
+    bot.command("teste",ctx => {
 
+        // await ctx.reply('Isso é um teste com o botão no teclado',teclado.reply())
+        ctx.reply('Escolha uma das opções',teclado)
+    })
     
+    //quando o  comando acima funciona
+    // .then(text => console.log("ELE FUNCIONA ALSKDJHFGHASLJKDDFBASJDHFDGASDJDHFAS"))
+    //quando tem algum erro no comando
+    // .catch(err=>console.log("Não funcionou \nerro: "+err)))
+
     
     bot.on("sticker",ctx =>{
         ctx.reply("Queria saber usar sticker 😭😭😭😭😭😭")
     })
+    // bot.on('callback_query', (ctx) => {
+    //     console.log(ctx.callbackQuery.data)
+    //   })
     bot.on('text', (ctx) => {
-        try{
-            let retornoArray = []
-            base.find (item =>{
-                if (ctx.message.text.toLowerCase().includes(item.key.toLowerCase())){
-                    let retorno = service.arrayStringToInlineString(item.value);
-                    retornoArray = [...retornoArray,retorno]
-                }
-            });
-            let allRetorno = ''
-            if (retornoArray.length > 0){
-                allRetorno = service.arrayStringToInlineString(retornoArray);
-                ctx.replyWithMarkdown(allRetorno)
-            }else{
-                ctx.replyWithMarkdown (sorryMessage)
-            }
+        let retornoArray = service.findItemOnDatabaseArray(ctx.message.text,base)
+        if (retornoArray.length > 0){
+            const allRetorno = service.arrayStringToInlineString(retornoArray);
+            ctx.replyWithMarkdown(allRetorno,{reply_markup:{remove_keyboard:true}})
+        }else{
+            ctx.replyWithMarkdown (sorryMessage,{reply_markup:{remove_keyboard:true}})
         }
-        catch (err){
-            console.log (err)
-            ctx.replyWithMarkdown (sorryMessage)
-        }
+        
     })
     
     

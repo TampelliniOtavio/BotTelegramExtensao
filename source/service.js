@@ -2,6 +2,7 @@
 const Message = require('./models/messageSchema')
 
 
+
 async function get(){
     let retorno = await Message.find().then(res =>{
         return res
@@ -12,6 +13,17 @@ async function get(){
 }
 
 module.exports.get =  get()
+
+module.exports.findItemOnDatabaseArray = (item,database) =>{
+    let retornoArray = []
+    database.find(row =>{
+        if (item.toLowerCase().includes(row.key.toLowerCase())){
+            const retorno = this.arrayStringToInlineString(row.value);
+            retornoArray = [...retornoArray,retorno]
+        }
+    });
+    return retornoArray
+}
 
 module.exports.arrayStringToInlineString = array =>{
     let retorno = ''
