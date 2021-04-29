@@ -20,19 +20,18 @@ messages.once('open', ()=>{
 const service = require('./service')
 // criando o bot
 const { Telegraf } = require("telegraf");
-const { Router, Markup } = Telegraf
 const bot = new Telegraf(process.env.TOKEN);
 
 // pegar toda a base do mongoDB e depois fazer as operações com o bot
 service.get.then(base=>{
     //após o retorno da base de dados
     const avaliableHelp = base.map(key =>{
-        return "*"+ key.key +"* "
+        return " \n*"+ key.key +"*"
     })
 
     // strings de entrada, ajuda, configurações e desculpas
-    const startMessage = 'Bem vindo!';
-    const helpMessage = 'Sou fácil de usar. Basta perguntar!\n\n*Perguntas disponíveis*: \n\n'+avaliableHelp;
+    const startMessage = 'Bem vindo!\n\nEsse bot foi desenvolvido para turmas de pré-programação tirarem suas dúvidas\n\nDigite /help para ver as perguntas disponíveis';
+    const helpMessage = '*Perguntas disponíveis*: \n'+avaliableHelp;
     
     const settingsMessage = 'Ainda não tenho configurações para ajustar.';
     
