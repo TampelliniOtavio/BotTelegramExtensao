@@ -20,7 +20,9 @@ const {
     get, 
     arrayStringToInlineString, 
     clamp, 
-    makeKeyboard
+    makeKeyboard,
+    returnJsonObjectOnItem,
+    maxPage
 } = require('./utils/functions');
 
 // constrtuindo o bot
@@ -49,10 +51,9 @@ bot.use(localSession.middleware(session));
 get.then(base=>{
     //após o retorno da base de dados
 
-
     // strings de entrada, ajuda, configurações e desculpas
-    const startMessage = 'Bem vindo!\n\nEsse bot foi desenvolvido para turmas de pré-programação tirarem suas dúvidas';
-    let actualMessage = startMessage;
+    const startMessage = 'Bem vindo!\n\nEsse bot foi desenvolvido para turmas de pré-programação tirarem suas dúvidas\n\nEscolha uma das opções abaixo para receber uma explicação sobre o assunto\n';
+    let actualMessage;
 
     const helpMessage = 'Precisa de ajuda?\n\nTemos duas opções: \n\nFaça uma pergunta diretamente;\nDigite /start.';
     
@@ -60,59 +61,84 @@ get.then(base=>{
     
     const sorryMessage = 'Desculpe, ainda não sei nada sobre isso.';
 
-    let vetor = [];
-    base.map(linha=>{
-        vetor = [...vetor,Key.callback(linha.key,linha.key)];
-    });
     //criando o teclado
     const itemsPerPage = 4;
-    const maxPage = vetor.length/itemsPerPage;
-    let keyboard = makeKeyboard(vetor,itemsPerPage);
+    let maxP;
+    let keyboard;
 
-    // comandos /start, /help e /settings
+    // comando /start
     bot.start(async ctx =>{
         ctx[session].counter = 0;
-        actualMessage = startMessage + "\n\nEscolha uma das opções abaixo para receber uma explicação sobre o assunto";
-        await ctx.replyWithMarkdown(actualMessage,keyboard.construct(ctx[session].counter).inline()).catch((err)=>console.log("Erro no /start\nErro: "+err));
+        actualMessage = startMessage;
+        const obj = returnJsonObjectOnItem("/start",base);
+        maxP = maxPage(obj.buttons,itemsPerPage);
+        keyboard = makeKeyboard(obj.buttons,itemsPerPage, true);
+        const OptionalParams = {
+            parse_mode: 'Markdown',
+            reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
+        };
+        await ctx.replyWithMarkdownV2(actualMessage,OptionalParams)
+                .catch((err)=>console.log("Erro no /start\nErro: "+err));
     });
 
-    bot.help(async ctx => await ctx.replyWithMarkdown(helpMessage),{reply_markup:{remove_keyboard:true}});
-    bot.settings(async ctx => await ctx.replyWithMarkdown(settingsMessage),{reply_markup:{remove_keyboard:true}});
+    // comando /help
+    bot.help(async ctx => await ctx.replyWithMarkdown(helpMessage)
+                                    .catch((err)=>console.log("Erro no /help\nErro: "+err)));
+
+    //comando /settings
+    bot.settings(async ctx => await ctx.replyWithMarkdown(settingsMessage)
+                                        .catch((err)=>console.log("Erro no /settings\nErro: "+err)));
     
     // quando enviar sticker
     bot.on("sticker",async ctx =>{
-        await ctx.reply("Queria saber usar sticker 😭😭😭😭😭😭");
+        await ctx.reply("Queria saber usar sticker 😭😭😭😭😭😭")
+                .catch((err)=>console.log("Erro na mensagem de sticker\nErro: "+err));
     });
 
     // quando clica num botão inline
     bot.on('callback_query', async (ctx) => {
         const data = ctx.callbackQuery.data;
-        let retornoArray = findItemOnDatabaseArray(ctx.callbackQuery.data,base);
+        
         if (data === 'right'){
-            ctx[session].counter = clamp(ctx[session].counter + 1, 0, maxPage);
+            ctx[session].counter = clamp(ctx[session].counter + 1, 0, maxP);
+            
         }else if (data === 'left'){
-            ctx[session].counter = clamp(ctx[session].counter - 1, 0, maxPage);
-        }else if(retornoArray.length > 0){
-            actualMessage = arrayStringToInlineString(retornoArray);  
+            ctx[session].counter = clamp(ctx[session].counter - 1, 0, maxP);
+            
+        }else {
+            // pega o objeto baseado no callbackQuery
+            const obj = returnJsonObjectOnItem(data,base);
+            // Constrói a mensagem e os botões do objeto
+            actualMessage = arrayStringToInlineString(obj.value);
+            keyboard = makeKeyboard(obj.buttons,itemsPerPage, data==="/start")
+            maxP = maxPage(obj.buttons,itemsPerPage);
             ctx[session].counter = 0;
-        }else{
+
         }
+        // Adiciona Markdown na mensagem e o teclado abaixo 
         const OptionalParams = {
             parse_mode: 'Markdown',
             reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
         };
-        await ctx.answerCbQuery();
-        await ctx.editMessageText(actualMessage, OptionalParams).catch(() => console.log("deu erro atualizando o texto"));
+        // Responde a requisição do botão e edita o texto com a mensagem e o teclado
+        await ctx.answerCbQuery()
+                .then(ctx.editMessageText(actualMessage, OptionalParams)
+                        .catch((err) => console.log("deu erro atualizando o texto\nErro: "+err)))
+                .catch((err)=>console.log("deu erro respondendo os botões\nErro: "+err));
       });
     
     // quando enviam um texto no chat
-    bot.on('text', (ctx) => {
+    bot.on('text', async (ctx) => {
+        // Pesquisa a mensagem no banco
         let retornoArray = findItemOnDatabaseArray(ctx.message.text,base);
         if (retornoArray.length > 0){
+            // Concatena a mensagem a partir do array
             const allRetorno = arrayStringToInlineString(retornoArray);
-            ctx.replyWithMarkdown(allRetorno,{reply_markup:{remove_keyboard:true}});
+            await ctx.replyWithMarkdown(allRetorno)
+                    .catch((err)=>console.log("Erro retornando a resposta\nErro: "+err));
         }else{
-            ctx.replyWithMarkdown (sorryMessage,{reply_markup:{remove_keyboard:true}});
+            await ctx.replyWithMarkdown(sorryMessage)
+                    .catch((err)=>console.log("Erro na mensagem de desculpas\nErro: "+err));
         }
         
     });

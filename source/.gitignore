@@ -1,3 +1,6 @@
 .env
 /node_modules/
 sessions.json
+/notes.txt
+/estruturaBase.json
+/teste.js
