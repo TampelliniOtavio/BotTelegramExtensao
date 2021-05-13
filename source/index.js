@@ -55,7 +55,7 @@ get.then(base=>{
     const startMessage = 'Bem vindo!\n\nEsse bot foi desenvolvido para turmas de pré-programação tirarem suas dúvidas\n\nEscolha uma das opções abaixo para receber uma explicação sobre o assunto\n';
     let actualMessage;
 
-    const helpMessage = 'Precisa de ajuda?\n\nTemos duas opções: \n\nFaça uma pergunta diretamente;\nDigite /start.';
+    const helpMessage = 'Utilizar esse Bot é bem fácil!\n\nComeçe fazendo uma pergunta diretamente, caso não saiba por onde começar, digite /start!!';
     
     const settingsMessage = 'Ainda não tenho configurações para ajustar.';
     
@@ -65,6 +65,21 @@ get.then(base=>{
     const itemsPerPage = 4;
     let maxP;
     let keyboard;
+
+    bot.command("teste",async ctx =>{
+        const arr = ["Função é um conjunto de instruções, que realiza uma determinada tarefa. É criado da mesma maneira que outro algoritmo qualquer, deve ser identificado e possuir variáveis e operações.","As funções também podem ser utilizadas como variáveis, por retornar valores associados ao seu nome.","Veja um exemplo em java: ","","//O _public_ indica que a função pode ser utilizada por outras classes além da em que a função foi instanciada, para negar o acesso, utilize _private_","","//o _int_ após public indica o tipo (int = inteiro) de retorno, para funções sem retorno, utilizar _void_ ","","_public_ _int_ soma(int num1, int num2) {","int soma = num1 + num2;","return soma;","}",""," Você pode utilizar essa operação como variável, como o exemplo abaixo: ","","int exemplo = 3 + soma(2,4);","","O valor de exemplo será 9, por executar a função soma, que dá o resultado 6 naquele caso e, por fim, somar 3.","Note que a função soma requer dois *parâmetros*."]
+        const butt = ["Parâmetros"];
+        const str = arrayStringToInlineString(arr);
+        ctx[session].counter = 0;
+
+        keyboard = makeKeyboard(butt,itemsPerPage);
+        const OptionalParams = {
+            parse_mode: 'Markdown',
+            reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
+        };
+
+        await ctx.replyWithMarkdown(str,OptionalParams);
+    })
 
     // comando /start
     bot.start(async ctx =>{
@@ -98,7 +113,7 @@ get.then(base=>{
     // quando clica num botão inline
     bot.on('callback_query', async (ctx) => {
         const data = ctx.callbackQuery.data;
-        
+        let notError = true;
         if (data === 'right'){
             ctx[session].counter = clamp(ctx[session].counter + 1, 0, maxP);
             
@@ -109,22 +124,36 @@ get.then(base=>{
             // pega o objeto baseado no callbackQuery
             const obj = returnJsonObjectOnItem(data,base);
             // Constrói a mensagem e os botões do objeto
-            actualMessage = arrayStringToInlineString(obj.value);
-            keyboard = makeKeyboard(obj.buttons,itemsPerPage, data==="/start")
-            maxP = maxPage(obj.buttons,itemsPerPage);
-            ctx[session].counter = 0;
+            try{
+                actualMessage = arrayStringToInlineString(obj.value);
+                keyboard = makeKeyboard(obj.buttons,itemsPerPage, data==="/start")
+                maxP = maxPage(obj.buttons,itemsPerPage);
+                ctx[session].counter = 0;
+            }catch{
+                const obj = returnJsonObjectOnItem("/start",base);
+                maxP = maxPage(obj.buttons,itemsPerPage);
+                keyboard = makeKeyboard([],itemsPerPage);
+                const OptionalParams = {
+                    parse_mode: 'Markdown',
+                    reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
+                };
+                notError = false;
+                await ctx.answerCbQuery().then(ctx.editMessageText("Desculpe, mas esse botão não existe uma funcionalidade ainda.",OptionalParams))
+            }
 
         }
         // Adiciona Markdown na mensagem e o teclado abaixo 
-        const OptionalParams = {
-            parse_mode: 'Markdown',
-            reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
-        };
-        // Responde a requisição do botão e edita o texto com a mensagem e o teclado
-        await ctx.answerCbQuery()
-                .then(ctx.editMessageText(actualMessage, OptionalParams)
-                        .catch((err) => console.log("deu erro atualizando o texto\nErro: "+err)))
-                .catch((err)=>console.log("deu erro respondendo os botões\nErro: "+err));
+        if (notError){
+            const OptionalParams = {
+                parse_mode: 'Markdown',
+                reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
+            };
+            // Responde a requisição do botão e edita o texto com a mensagem e o teclado
+            await ctx.answerCbQuery()
+                    .then(ctx.editMessageText(actualMessage, OptionalParams)
+                            .catch((err) => console.log("deu erro atualizando o texto\nErro: "+err)))
+                    .catch((err)=>console.log("deu erro respondendo os botões\nErro: "+err));
+        }
       });
     
     // quando enviam um texto no chat

@@ -40,25 +40,30 @@ module.exports.findItemOnDatabaseArray = findItemOnDatabaseArray;
 function makeKeyboard(itemsVector,itemsPerPage = 4, isInStart = false){
     let minPage = 0;
     return Keyboard.make((page) => {
-        const pageItems = itemsVector.slice(page * itemsPerPage, page * itemsPerPage + itemsPerPage);
-        const maxPage =Math.ceil( itemsVector.length / itemsPerPage) -1;
-        let endButtons;
-        if(isInStart){
-            endButtons = [
-                Key.callback('<----', 'left', page === minPage),
-                Key.callback('---->', 'right', page === maxPage || itemsVector.length < itemsPerPage),
-            ]
+        if (itemsVector.length > 0){
+            const pageItems = itemsVector.slice(page * itemsPerPage, page * itemsPerPage + itemsPerPage);
+            const maxPage =Math.ceil( itemsVector.length / itemsPerPage) -1;
+            let endButtons;
+
+            if(isInStart){
+                endButtons = [
+                    Key.callback('<----', 'left', page === minPage),
+                    Key.callback('---->', 'right', page === maxPage || itemsVector.length < itemsPerPage),
+                ]
+            }else{
+                endButtons = [
+                    Key.callback('<----', 'left', page === minPage),
+                    Key.callback('Inicio','/start', isInStart),
+                    Key.callback('---->', 'right', page === maxPage || itemsVector.length < itemsPerPage),
+                ]
+            }
+            return Keyboard.combine(
+                Keyboard.make(pageItems, {columns: 2}),
+                Keyboard.make(endButtons,{columns:isInStart?2:3})
+            );
         }else{
-            endButtons = [
-                Key.callback('<----', 'left', page === minPage),
-                Key.callback('Inicio','/start', isInStart),
-                Key.callback('---->', 'right', page === maxPage || itemsVector.length < itemsPerPage),
-            ]
+            return Key.callback('Inicio','/start', isInStart);
         }
-        return Keyboard.combine(
-            Keyboard.make(pageItems, {columns: 2}),
-            Keyboard.make(endButtons,{columns:isInStart?2:3})
-        );
     });
 }
 module.exports.makeKeyboard = makeKeyboard;
