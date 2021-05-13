@@ -130,30 +130,22 @@ get.then(base=>{
                 maxP = maxPage(obj.buttons,itemsPerPage);
                 ctx[session].counter = 0;
             }catch{
-                const obj = returnJsonObjectOnItem("/start",base);
-                maxP = maxPage(obj.buttons,itemsPerPage);
                 keyboard = makeKeyboard([],itemsPerPage);
-                const OptionalParams = {
-                    parse_mode: 'Markdown',
-                    reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
-                };
-                notError = false;
-                await ctx.answerCbQuery().then(ctx.editMessageText("Desculpe, mas esse botão não existe uma funcionalidade ainda.",OptionalParams))
+                actualMessage = "Desculpe, mas esse botão não existe uma funcionalidade ainda.";
+                ctx[session].counter = 0;
             }
 
         }
-        // Adiciona Markdown na mensagem e o teclado abaixo 
-        if (notError){
-            const OptionalParams = {
-                parse_mode: 'Markdown',
-                reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
-            };
-            // Responde a requisição do botão e edita o texto com a mensagem e o teclado
-            await ctx.answerCbQuery()
-                    .then(ctx.editMessageText(actualMessage, OptionalParams)
-                            .catch((err) => console.log("deu erro atualizando o texto\nErro: "+err)))
-                    .catch((err)=>console.log("deu erro respondendo os botões\nErro: "+err));
-        }
+            // Adiciona Markdown na mensagem e o teclado abaixo 
+        const OptionalParams = {
+            parse_mode: 'Markdown',
+            reply_markup: keyboard.construct(ctx[session].counter).inline().reply_markup
+        };
+        // Responde a requisição do botão e edita o texto com a mensagem e o teclado
+        await ctx.answerCbQuery()
+                .then(ctx.editMessageText(actualMessage, OptionalParams)
+                        .catch((err) => console.log("deu erro atualizando o texto\nErro: "+err)))
+                .catch((err)=>console.log("deu erro respondendo os botões\nErro: "+err));
       });
     
     // quando enviam um texto no chat
