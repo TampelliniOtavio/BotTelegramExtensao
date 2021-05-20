@@ -1,15 +1,15 @@
 const Message = require('../models/messageSchema');
 const { Keyboard, Key } = require('telegram-keyboard');
 
-async function get(){
-    let retorno = await Message.find().then(res =>{
+async function get(key = {}){
+    let retorno = await Message.find(key).then(res =>{
         return res;
     }).catch(err=>{
         return err;
     });
     return retorno;
 }
-module.exports.get = get();
+module.exports.get = get;
 
 function arrayStringToInlineString(array){
     let retorno = '';
