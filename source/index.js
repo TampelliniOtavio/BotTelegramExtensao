@@ -259,5 +259,13 @@ bot.launch();
 
 /*se nosso SO tentar interromper a execução do NodeJS,
   4 avisamos os servidores do telegram*/
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+process.once("SIGINT", () => {
+    console.log("Desligando...");
+    bot.stop("SIGINT");
+    mongoose.disconnect();
+});
+process.once("SIGTERM", () => {
+    console.log("Desligando...");
+    bot.stop("SIGTERM");
+    mongoose.disconnect();
+});
