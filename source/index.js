@@ -94,7 +94,6 @@ bot.start(async (ctx) => {
 // quando clica num botão inline
 bot.on("callback_query", async (ctx) => {
     const data = ctx.callbackQuery.data;
-    let notError = true;
     if (data === "right") {
         ctx[session].counter = clamp(ctx[session].counter + 1, 0, maxP);
         // Adiciona Markdown na mensagem e o teclado abaixo
@@ -137,7 +136,33 @@ bot.on("callback_query", async (ctx) => {
             .catch((err) =>
                 console.log("deu erro respondendo os botões\nErro: " + err)
             );
-    } else {
+    } else if(data === "Enviar Tabela Verdade"){
+        ctx
+                .answerCbQuery()
+                .then(
+                    ctx
+                        .replyWithPhoto({source: './img/tabela_verdade.png'})
+                        .catch((err) =>
+                            console.log("deu erro enviando a tabela verdade\nErro: " + err)
+                        )
+                )
+                .catch((err) =>
+                    console.log("deu erro respondendo os botões\nErro: " + err)
+                );
+    }else if(data === "Enviar Simbologia"){
+        ctx
+                .answerCbQuery()
+                .then(
+                    ctx
+                        .replyWithPhoto({source: './img/simbologia.jpg'})
+                        .catch((err) =>
+                            console.log("deu erro enviando a simbologia\nErro: " + err)
+                        )
+                )
+                .catch((err) =>
+                    console.log("deu erro respondendo os botões\nErro: " + err)
+                );
+    }else {
         // pega o objeto baseado no callbackQuery
         const retorno = get({ key: data });
         retorno.then((i) => {
@@ -145,7 +170,7 @@ bot.on("callback_query", async (ctx) => {
             // Constrói a mensagem e os botões do objeto
             try {
                 actualMessage = arrayStringToInlineString(obj.value);
-                keyboard = makeKeyboard(obj.buttons, itemsPerPage, data === "/start");
+                keyboard = makeKeyboard(obj.buttons, itemsPerPage, data === "/start",obj.previous);
                 maxP = maxPage(obj.buttons, itemsPerPage);
                 ctx[session].counter = 0;
             } catch {
@@ -180,7 +205,7 @@ bot.on("callback_query", async (ctx) => {
 // quando enviam um texto no chat
 bot.on("text", async (ctx) => {
     // Pesquisa a mensagem no banco
-    let retornoArray = findItemOnDatabaseArray(ctx.message.text, base);
+    let retornoArray = findItemOnDatabaseArray(ctx.message.text, await get());
     if (retornoArray.length > 0) {
         // Concatena a mensagem a partir do array
         const allRetorno = arrayStringToInlineString(retornoArray);
@@ -217,42 +242,6 @@ bot.on("sticker", async (ctx) => {
     await ctx
         .reply("Queria saber usar sticker 😭😭😭😭😭😭")
         .catch((err) => console.log("Erro na mensagem de sticker\nErro: " + err));
-});
-
-bot.command("teste", async (ctx) => {
-    const arr = [
-        "Função é um conjunto de instruções, que realiza uma determinada tarefa. É criado da mesma maneira que outro algoritmo qualquer, deve ser identificado e possuir variáveis e operações.",
-        "As funções também podem ser utilizadas como variáveis, por retornar valores associados ao seu nome.",
-        "Veja um exemplo em java: ",
-        "",
-        "//O _public_ indica que a função pode ser utilizada por outras classes além da em que a função foi instanciada, para negar o acesso, utilize _private_",
-        "",
-        "//o _int_ após public indica o tipo (int = inteiro) de retorno, para funções sem retorno, utilizar _void_ ",
-        "",
-        "_public_ _int_ soma(int num1, int num2) {",
-        "int soma = num1 + num2;",
-        "return soma;",
-        "}",
-        "",
-        " Você pode utilizar essa operação como variável, como o exemplo abaixo: ",
-        "",
-        "int exemplo = 3 + soma(2,4);",
-        "",
-        "O valor de exemplo será 9, por executar a função soma, que dá o resultado 6 naquele caso e, por fim, somar 3.",
-        "Note que a função soma requer dois *parâmetros*.",
-    ];
-    const butt = ["Parâmetros"];
-    const str = arrayStringToInlineString(arr);
-    ctx[session].counter = 0;
-
-    keyboard = makeKeyboard(butt, itemsPerPage);
-    const OptionalParams = {
-        parse_mode: "Markdown",
-        reply_markup: keyboard.construct(ctx[session].counter).inline()
-            .reply_markup,
-    };
-
-    await ctx.replyWithMarkdown(str, OptionalParams);
 });
 
 bot.launch();

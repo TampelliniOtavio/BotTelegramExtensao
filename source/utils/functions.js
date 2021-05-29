@@ -37,8 +37,9 @@ function findItemOnDatabaseArray(item,database){
 }
 module.exports.findItemOnDatabaseArray = findItemOnDatabaseArray;
 
-function makeKeyboard(itemsVector,itemsPerPage = 4, isInStart = false){
+function makeKeyboard(itemsVector,itemsPerPage = 4, isInStart = false, previous = ""){
     let minPage = 0;
+    let columns = 2;
     return Keyboard.make((page) => {
         if (itemsVector.length > 0){
             const pageItems = itemsVector.slice(page * itemsPerPage, page * itemsPerPage + itemsPerPage);
@@ -50,7 +51,16 @@ function makeKeyboard(itemsVector,itemsPerPage = 4, isInStart = false){
                     Key.callback('<----', 'left', page === minPage),
                     Key.callback('---->', 'right', page === maxPage || itemsVector.length < itemsPerPage),
                 ]
+            }else if( previous != "/start" && previous != ""){
+                columns = 4;
+                endButtons = [
+                    Key.callback('<----', 'left', page === minPage),
+                    Key.callback('Anterior', previous),
+                    Key.callback('Inicio','/start', isInStart),
+                    Key.callback('---->', 'right', page === maxPage || itemsVector.length < itemsPerPage),
+                ]
             }else{
+                columns = 3;
                 endButtons = [
                     Key.callback('<----', 'left', page === minPage),
                     Key.callback('Inicio','/start', isInStart),
@@ -59,8 +69,15 @@ function makeKeyboard(itemsVector,itemsPerPage = 4, isInStart = false){
             }
             return Keyboard.combine(
                 Keyboard.make(pageItems, {columns: 2}),
-                Keyboard.make(endButtons,{columns:isInStart?2:3})
+                Keyboard.make(endButtons,{columns:columns})
             );
+        }else if(previous != "/start" && previous != "" ){
+            const endButtons = [
+                Key.callback('Anterior', previous),
+                Key.callback('Inicio','/start', isInStart),
+
+            ]
+            return Keyboard.make(endButtons,{columns:2});
         }else{
             return Key.callback('Inicio','/start', isInStart);
         }
