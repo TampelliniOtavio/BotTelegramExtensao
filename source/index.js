@@ -52,9 +52,6 @@ bot.use(localSession.middleware(session));
 
 // pegar toda a base do mongoDB e depois fazer as operações com o bot
 // strings de entrada, ajuda, configurações e desculpas
-const startMessage =
-    "Bem vindo!\n\nEsse bot foi desenvolvido para turmas de pré-programação tirarem suas dúvidas\n\nEscolha uma das opções abaixo para receber uma explicação sobre o assunto\n";
-let actualMessage;
 const helpMessage =
     "Utilizar esse Bot é bem fácil!\n\nComeçe fazendo uma pergunta diretamente, caso não saiba por onde começar, digite /start!!";
 const settingsMessage = "Ainda não tenho configurações para ajustar.";
@@ -68,22 +65,21 @@ let keyboard;
 // comando /start
 bot.start(async (ctx) => {
     ctx[session].counter = 0;
-    actualMessage = startMessage;
-    // const obj = returnJsonObjectOnItem("/start",base);
     const retorno = get({ key: "/start" });
     retorno
-        .then((i) => {
-            const obj = i[0];
-            maxP = maxPage(obj.buttons, itemsPerPage);
-            keyboard = makeKeyboard(obj.buttons, itemsPerPage, true);
-            const OptionalParams = {
-                parse_mode: "Markdown",
-                reply_markup: keyboard.construct(ctx[session].counter).inline()
-                    .reply_markup,
-            };
-            ctx
-                .replyWithMarkdownV2(actualMessage, OptionalParams)
-                .catch((err) => console.log("Erro no /start\nErro: " + err));
+    .then((i) => {
+        const obj = i[0];
+        actualMessage = arrayStringToInlineString(obj.value);
+        maxP = maxPage(obj.buttons, itemsPerPage);
+        keyboard = makeKeyboard(obj.buttons, itemsPerPage, true);
+        const OptionalParams = {
+            parse_mode: "Markdown",
+            reply_markup: keyboard.construct(ctx[session].counter).inline()
+                .reply_markup,
+        };
+        ctx
+            .replyWithMarkdownV2(actualMessage, OptionalParams)
+            .catch((err) => console.log("Erro no /start\nErro: " + err));
         })
         .catch((err) =>
             console.log("Erro ao pesquisar na base de dados. \nErro: " + err)
@@ -202,6 +198,22 @@ bot.on("callback_query", async (ctx) => {
     }
 });
 
+// comando /help
+bot.help(
+    async (ctx) =>
+        await ctx
+            .replyWithMarkdown(helpMessage)
+            .catch((err) => console.log("Erro no /help\nErro: " + err))
+);
+
+//comando /settings
+bot.settings(
+    async (ctx) =>
+        await ctx
+            .replyWithMarkdown(settingsMessage)
+            .catch((err) => console.log("Erro no /settings\nErro: " + err))
+);
+
 // quando enviam um texto no chat
 bot.on("text", async (ctx) => {
     // Pesquisa a mensagem no banco
@@ -221,26 +233,10 @@ bot.on("text", async (ctx) => {
     }
 });
 
-// comando /help
-bot.help(
-    async (ctx) =>
-        await ctx
-            .replyWithMarkdown(helpMessage)
-            .catch((err) => console.log("Erro no /help\nErro: " + err))
-);
-
-//comando /settings
-bot.settings(
-    async (ctx) =>
-        await ctx
-            .replyWithMarkdown(settingsMessage)
-            .catch((err) => console.log("Erro no /settings\nErro: " + err))
-);
-
 // quando enviar sticker
 bot.on("sticker", async (ctx) => {
     await ctx
-        .reply("Queria saber usar sticker 😭😭😭😭😭😭")
+        .reply("c:")
         .catch((err) => console.log("Erro na mensagem de sticker\nErro: " + err));
 });
 
